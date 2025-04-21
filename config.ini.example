@@ -1,0 +1,9 @@
+[habit.read]
+name = Read
+description = "Read for at least 15 minutes."
+active = true
+
+[habit.floss]
+name = Floss
+description = "Floss before brushing teeth."
+active = true
