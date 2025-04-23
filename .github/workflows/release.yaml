@@ -6,11 +6,8 @@ on:
       - 'v*.*.*'
 
 jobs:
-  build-and-release:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
     strategy:
       matrix:
         goos: [ linux, windows, darwin ]
@@ -34,17 +31,35 @@ jobs:
         run: |
           GOOS=${{ matrix.goos }}
           GOARCH=${{ matrix.goarch }}
-          go build -o trek-${{ matrix.goos }}-${{ matrix.goarch }}$([[.exe]]).
+          output_name="trek-${{ matrix.goos }}-${{ matrix.goarch }}"
+          if [[ "${{ matrix.goos }}" == "windows" ]]; then
+            output_name="${output_name}.exe"
+          fi
+          go build -o "$output_name" .
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trek-binaries-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: trek-*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: trek-binaries-*
+          path: artifacts
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            trek-linux-amd64
-            trek-linux-arm64
-            trek-windows-amd64.exe
-            trek-darwin-amd64
-            trek-darwin-arm64
+          files: artifacts/**/trek-*
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: |
