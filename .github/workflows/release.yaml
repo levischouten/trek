@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        goos: [ linux, windows, darwin ]
+        goarch: [ amd64, arm64 ]
+        exclude:
+          - goos: windows
+            goarch: arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '^1.24'
+
+      - name: Build for ${{ matrix.goos }} and ${{ matrix.goarch }}
+        run: |
+          GOOS=${{ matrix.goos }}
+          GOARCH=${{ matrix.goarch }}
+          go build -o trek-${{ matrix.goos }}-${{ matrix.goarch }}$([[.exe]]).
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            trek-linux-amd64
+            trek-linux-arm64
+            trek-windows-amd64.exe
+            trek-darwin-amd64
+            trek-darwin-arm64
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            See the assets below for the latest release.

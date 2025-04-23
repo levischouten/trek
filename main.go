@@ -14,33 +14,33 @@ import (
 
 func parseArgs(args []string) (string, []string, map[string]string) {
 	if len(args) < 2 {
-		fmt.Println("Usage: cli <command> [arguments...] [--optional-arguments...]")
+		fmt.Println("Usage: cli <command> [arguments...] [--flags...]")
 		os.Exit(1)
 	}
 
 	command := args[1]
 	var arguments []string
-	optionalArgs := make(map[string]string)
+	flags := make(map[string]string)
 
 	for _, arg := range args[2:] {
 		if strings.HasPrefix(arg, "--") {
 			parts := strings.SplitN(arg[2:], "=", 2)
 			if len(parts) != 2 {
-				fmt.Println("Usage: cli <command> [arguments...] [--optional-arguments...]")
+				fmt.Println("Usage: cli <command> [arguments...] [--flags...]")
 				os.Exit(1)
 			}
 			key, value := parts[0], parts[1]
-			optionalArgs[key] = value
+			flags[key] = value
 		} else {
 			arguments = append(arguments, arg)
 		}
 	}
 
-	return command, arguments, optionalArgs
+	return command, arguments, flags
 }
 
 func main() {
-	command, arguments, optionalArgs := parseArgs(os.Args)
+	command, arguments, flags := parseArgs(os.Args)
 
 	dir, err := os.UserHomeDir()
 	if err != nil {
@@ -63,7 +63,7 @@ func main() {
 			return
 		}
 
-		date, ok := optionalArgs["date"]
+		date, ok := flags["date"]
 		if ok {
 			_, err = time.Parse("2006-01-02", date)
 			if err != nil {
